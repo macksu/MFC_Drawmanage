@@ -13,6 +13,7 @@
 #define IDC_RADIO1                      1005
 #define IDC_RADIO2                      1006
 #define IDC_COMBO1                      1007
+#define IDC_COMBO2                      1009
 
 // Next default values for new objects
 // 

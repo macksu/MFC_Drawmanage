@@ -64,6 +64,7 @@ void CMFCDrawmanageDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Text(pDX, IDC_EDIT1, LineWidth);
 	DDX_Radio(pDX, IDC_RADIO1, m_LineType);
 	DDX_Control(pDX, IDC_COMBO1, m_filled);
+	DDX_Control(pDX, IDC_COMBO2, m_Mode);
 }
 
 BEGIN_MESSAGE_MAP(CMFCDrawmanageDlg, CDialogEx)
@@ -77,6 +78,8 @@ BEGIN_MESSAGE_MAP(CMFCDrawmanageDlg, CDialogEx)
 	ON_CBN_SELCHANGE(IDC_COMBO1, &CMFCDrawmanageDlg::OnCbnSelchangeCombo1)
 	ON_WM_LBUTTONDOWN()
 	ON_WM_LBUTTONUP()
+	ON_BN_CLICKED(IDC_BUTTON2, &CMFCDrawmanageDlg::OnBnClickedButton2)
+	ON_CBN_SELCHANGE(IDC_COMBO2, &CMFCDrawmanageDlg::OnCbnSelchangeCombo2)
 END_MESSAGE_MAP()
 
 
@@ -119,6 +122,15 @@ BOOL CMFCDrawmanageDlg::OnInitDialog()
 	m_filled.AddString(TEXT("无填充"));
 	m_filled.AddString(TEXT("有填充"));
 	m_filled.SetCurSel(0);
+
+	Mode = LineMode;
+	m_Mode.AddString(TEXT("画线"));
+	m_Mode.AddString(TEXT("画点"));
+	m_Mode.AddString(TEXT("画矩形"));
+	m_Mode.AddString(TEXT("画圆"));
+	m_Mode.AddString(TEXT("自由绘图"));
+	m_Mode.SetCurSel(0);
+
 	UpdateData(false);
 
 
@@ -224,15 +236,17 @@ void CMFCDrawmanageDlg::OnCbnSelchangeCombo1()
 {
 	// TODO: 在此添加控件通知处理程序代码
 	int index = m_filled.GetCurSel();
-	CString str;
-	str.Format(TEXT("%d"), index);
-	MessageBox(str);
+	/*CString str;
+	str.Format(TEXT("%d"), index);*/
+
 
 	if (index == 0) {
 		isfilled = false;
+		MessageBox(TEXT("无填充"), TEXT("提示"));
 	}
 	else {
 		isfilled = true;
+		MessageBox(TEXT("有填充"), TEXT("提示"));
 	}
 	
 }
@@ -241,11 +255,14 @@ void CMFCDrawmanageDlg::OnCbnSelchangeCombo1()
 void CMFCDrawmanageDlg::OnLButtonDown(UINT nFlags, CPoint point)
 {
 	// TODO: 在此添加消息处理程序代码和/或调用默认值
-
-	CClientDC dc(this); // 用于绘制的设备上下文
-	dc.SetPixel(point.x, point.y, LineColor);
-
 	DownPoint = point;
+	if (Mode == PointMode) {
+		CClientDC dc(this); // 用于绘制的设备上下文
+		dc.SetPixel(point.x, point.y, LineColor);
+	}
+
+
+
 	CDialogEx::OnLButtonDown(nFlags, point);
 }
 
@@ -253,12 +270,101 @@ void CMFCDrawmanageDlg::OnLButtonDown(UINT nFlags, CPoint point)
 void CMFCDrawmanageDlg::OnLButtonUp(UINT nFlags, CPoint point)
 {
 	// TODO: 在此添加消息处理程序代码和/或调用默认值
+	UpPoint = point;
+	switch (Mode)
+	{
+	case LineMode:
+		DrawLine();
+		break;
+	case PointMode:
+		break;
+	case EllipseMode:
+		DrawEllipse();
+		break;
+	case RectangleMode:
+		break;
+	case OwnerDrawMode:
+		break;
+	default:
+		break;
+	}
+	
+	
+	
+	
+	
+	CDialogEx::OnLButtonUp(nFlags, point);
+}
+
+
+void CMFCDrawmanageDlg::OnBnClickedButton2()
+{
+	// TODO: 在此添加控件通知处理程序代码
+	CColorDialog ShapeColorDlg(ShapeColor);
+	if (IDOK == ShapeColorDlg.DoModal()) {
+		ShapeColor = ShapeColorDlg.GetColor();
+
+	}
+}
+
+void CMFCDrawmanageDlg::DrawLine()
+{
 	CClientDC dc(this); // 用于绘制的设备上下文
 	CPen pen(LineType, LineWidth, LineColor);  //创建红色画笔
 	CPen* poldPen = dc.SelectObject(&pen);  //选择画笔到设备
 	dc.MoveTo(DownPoint.x, DownPoint.y);
-	dc.LineTo(point.x, point.y);
-
+	dc.LineTo(UpPoint.x, UpPoint.y);
 	dc.SelectObject(poldPen);  //恢复原始画笔
-	CDialogEx::OnLButtonUp(nFlags, point);
+}
+
+void CMFCDrawmanageDlg::DrawEllipse()
+{
+	CClientDC dc(this);
+	CPen outlinePen(LineType, LineWidth, LineColor);
+	CPen* poldPen = dc.SelectObject(&outlinePen);
+	CBrush* PoldBrush;
+	CBrush fillbrush(ShapeColor);
+	CBrush transparentBrush;
+	transparentBrush.CreateStockObject(NULL_BRUSH);
+	if (isfilled) {
+
+		PoldBrush = dc.SelectObject(&fillbrush);
+	}
+	else {
+
+		PoldBrush = dc.SelectObject(&transparentBrush);
+	}
+
+
+
+	dc.Ellipse(DownPoint.x, DownPoint.y, UpPoint.x, UpPoint.y);
+	dc.SelectObject(poldPen);
+	dc.SelectObject(PoldBrush);
+}
+
+
+void CMFCDrawmanageDlg::OnCbnSelchangeCombo2()
+{
+	// TODO: 在此添加控件通知处理程序代码
+	int index = m_Mode.GetCurSel();
+	if (index == 0) {
+		Mode = LineMode;
+		MessageBox(TEXT("画线"), TEXT("提示"));
+	}
+	else if(index ==1){
+		Mode = PointMode;
+		MessageBox(TEXT("画点"), TEXT("提示"));
+	}
+	else if (index == 2) {
+		Mode = RectangleMode;
+		MessageBox(TEXT("画矩形"), TEXT("提示"));
+	}
+	else if (index == 3) {
+		Mode = EllipseMode;
+		MessageBox(TEXT("画圆"), TEXT("提示"));
+	}
+	else if (index == 4) {
+		Mode = OwnerDrawMode;
+		MessageBox(TEXT("自由绘图"), TEXT("提示"));
+	}
 }

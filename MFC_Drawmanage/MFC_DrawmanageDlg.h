@@ -4,6 +4,15 @@
 
 #pragma once
 
+enum DrawingMode {
+	PointMode,
+	LineMode,
+	EllipseMode,
+	RectangleMode,
+	OwnerDrawMode,
+
+};
+
 
 // CMFCDrawmanageDlg 对话框
 class CMFCDrawmanageDlg : public CDialogEx
@@ -51,6 +60,14 @@ public:
 	afx_msg void OnLButtonDown(UINT nFlags, CPoint point);
 
 	
-	CPoint DownPoint;  //鼠标左键按下时的坐标
+	CPoint DownPoint;  //鼠标左键按下时的点
+	CPoint UpPoint;    //鼠标左键抬起时的点
 	afx_msg void OnLButtonUp(UINT nFlags, CPoint point);
+	afx_msg void OnBnClickedButton2();
+
+	int Mode;
+	void DrawLine();
+	void DrawEllipse();
+	CComboBox m_Mode;
+	afx_msg void OnCbnSelchangeCombo2();
 };
