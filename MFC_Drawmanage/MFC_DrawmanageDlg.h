@@ -48,4 +48,9 @@ public:
 	afx_msg void OnBnClickedRadio2();
 	CComboBox m_filled;
 	afx_msg void OnCbnSelchangeCombo1();
+	afx_msg void OnLButtonDown(UINT nFlags, CPoint point);
+
+	
+	CPoint DownPoint;  //鼠标左键按下时的坐标
+	afx_msg void OnLButtonUp(UINT nFlags, CPoint point);
 };

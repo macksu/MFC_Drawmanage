@@ -75,6 +75,8 @@ BEGIN_MESSAGE_MAP(CMFCDrawmanageDlg, CDialogEx)
 	ON_BN_CLICKED(IDC_RADIO1, &CMFCDrawmanageDlg::OnBnClickedRadio1)
 	ON_BN_CLICKED(IDC_RADIO2, &CMFCDrawmanageDlg::OnBnClickedRadio2)
 	ON_CBN_SELCHANGE(IDC_COMBO1, &CMFCDrawmanageDlg::OnCbnSelchangeCombo1)
+	ON_WM_LBUTTONDOWN()
+	ON_WM_LBUTTONUP()
 END_MESSAGE_MAP()
 
 
@@ -161,6 +163,8 @@ void CMFCDrawmanageDlg::OnPaint()
 	}
 	else
 	{
+		
+
 		CDialogEx::OnPaint();
 	}
 }
@@ -205,14 +209,14 @@ void CMFCDrawmanageDlg::OnEnChangeEdit1()
 void CMFCDrawmanageDlg::OnBnClickedRadio1()
 {
 	// TODO: 在此添加控件通知处理程序代码
-	LineType = true;
+	LineType = false;
 }
 
 
 void CMFCDrawmanageDlg::OnBnClickedRadio2()
 {
 	// TODO: 在此添加控件通知处理程序代码
-	LineType = false;
+	LineType = true;
 }
 
 
@@ -231,4 +235,30 @@ void CMFCDrawmanageDlg::OnCbnSelchangeCombo1()
 		isfilled = true;
 	}
 	
+}
+
+
+void CMFCDrawmanageDlg::OnLButtonDown(UINT nFlags, CPoint point)
+{
+	// TODO: 在此添加消息处理程序代码和/或调用默认值
+
+	CClientDC dc(this); // 用于绘制的设备上下文
+	dc.SetPixel(point.x, point.y, LineColor);
+
+	DownPoint = point;
+	CDialogEx::OnLButtonDown(nFlags, point);
+}
+
+
+void CMFCDrawmanageDlg::OnLButtonUp(UINT nFlags, CPoint point)
+{
+	// TODO: 在此添加消息处理程序代码和/或调用默认值
+	CClientDC dc(this); // 用于绘制的设备上下文
+	CPen pen(LineType, LineWidth, LineColor);  //创建红色画笔
+	CPen* poldPen = dc.SelectObject(&pen);  //选择画笔到设备
+	dc.MoveTo(DownPoint.x, DownPoint.y);
+	dc.LineTo(point.x, point.y);
+
+	dc.SelectObject(poldPen);  //恢复原始画笔
+	CDialogEx::OnLButtonUp(nFlags, point);
 }
