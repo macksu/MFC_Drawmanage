@@ -10,6 +10,8 @@ enum DrawingMode {
 	EllipseMode,
 	RectangleMode,
 	OwnerDrawMode,
+	TextMode,
+	ImageMode
 
 };
 
@@ -68,6 +70,16 @@ public:
 	int Mode;
 	void DrawLine();
 	void DrawEllipse();
+	void DrawRectangle();
 	CComboBox m_Mode;
 	afx_msg void OnCbnSelchangeCombo2();
+	afx_msg void OnBnClickedButton3();
+	afx_msg void OnMouseMove(UINT nFlags, CPoint point);
+
+	bool StartDrawing;
+	CPoint LastPoint; //上一时刻的点
+	CString m_text;
+	afx_msg void OnBnClickedButton4();
+	afx_msg void OnBnClickedButton5();
+	afx_msg void OnBnClickedButton6();
 };

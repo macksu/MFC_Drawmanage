@@ -54,6 +54,7 @@ CMFCDrawmanageDlg::CMFCDrawmanageDlg(CWnd* pParent /*=nullptr*/)
 	: CDialogEx(IDD_MFC_DRAWMANAGE_DIALOG, pParent)
 	,  LineWidth(0)
 	, m_LineType(0)
+	, m_text(_T(""))
 {
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
 }
@@ -65,6 +66,7 @@ void CMFCDrawmanageDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Radio(pDX, IDC_RADIO1, m_LineType);
 	DDX_Control(pDX, IDC_COMBO1, m_filled);
 	DDX_Control(pDX, IDC_COMBO2, m_Mode);
+	DDX_Text(pDX, IDC_EDIT2, m_text);
 }
 
 BEGIN_MESSAGE_MAP(CMFCDrawmanageDlg, CDialogEx)
@@ -80,6 +82,11 @@ BEGIN_MESSAGE_MAP(CMFCDrawmanageDlg, CDialogEx)
 	ON_WM_LBUTTONUP()
 	ON_BN_CLICKED(IDC_BUTTON2, &CMFCDrawmanageDlg::OnBnClickedButton2)
 	ON_CBN_SELCHANGE(IDC_COMBO2, &CMFCDrawmanageDlg::OnCbnSelchangeCombo2)
+	ON_BN_CLICKED(IDC_BUTTON3, &CMFCDrawmanageDlg::OnBnClickedButton3)
+	ON_WM_MOUSEMOVE()
+	ON_BN_CLICKED(IDC_BUTTON4, &CMFCDrawmanageDlg::OnBnClickedButton4)
+	ON_BN_CLICKED(IDC_BUTTON5, &CMFCDrawmanageDlg::OnBnClickedButton5)
+	ON_BN_CLICKED(IDC_BUTTON6, &CMFCDrawmanageDlg::OnBnClickedButton6)
 END_MESSAGE_MAP()
 
 
@@ -255,13 +262,23 @@ void CMFCDrawmanageDlg::OnCbnSelchangeCombo1()
 void CMFCDrawmanageDlg::OnLButtonDown(UINT nFlags, CPoint point)
 {
 	// TODO: 在此添加消息处理程序代码和/或调用默认值
+
 	DownPoint = point;
 	if (Mode == PointMode) {
 		CClientDC dc(this); // 用于绘制的设备上下文
 		dc.SetPixel(point.x, point.y, LineColor);
 	}
+	else if (Mode == OwnerDrawMode) {
+		StartDrawing = true;
+		LastPoint = point;
+	}
+	else if (Mode == TextMode) {
+		CClientDC dc(this);
+		dc.TextOut(point.x, point.y, m_text);
+		OnCbnSelchangeCombo2(); //切换回上一模式
+	}
 
-
+	OnCbnSelchangeCombo2(); //切换回上一模式
 
 	CDialogEx::OnLButtonDown(nFlags, point);
 }
@@ -282,17 +299,14 @@ void CMFCDrawmanageDlg::OnLButtonUp(UINT nFlags, CPoint point)
 		DrawEllipse();
 		break;
 	case RectangleMode:
+		DrawRectangle();
 		break;
 	case OwnerDrawMode:
+		StartDrawing = false;
 		break;
 	default:
 		break;
 	}
-	
-	
-	
-	
-	
 	CDialogEx::OnLButtonUp(nFlags, point);
 }
 
@@ -342,6 +356,31 @@ void CMFCDrawmanageDlg::DrawEllipse()
 	dc.SelectObject(PoldBrush);
 }
 
+void CMFCDrawmanageDlg::DrawRectangle()
+{
+	CClientDC dc(this);
+	CPen outlinePen(LineType, LineWidth, LineColor);
+	CPen* poldPen = dc.SelectObject(&outlinePen);
+	CBrush* PoldBrush;
+	CBrush fillbrush(ShapeColor);
+	CBrush transparentBrush;
+	transparentBrush.CreateStockObject(NULL_BRUSH);
+	if (isfilled) {
+
+		PoldBrush = dc.SelectObject(&fillbrush);
+	}
+	else {
+
+		PoldBrush = dc.SelectObject(&transparentBrush);
+	}
+
+
+
+	dc.Rectangle(DownPoint.x, DownPoint.y, UpPoint.x, UpPoint.y);
+	dc.SelectObject(poldPen);
+	dc.SelectObject(PoldBrush);
+}
+
 
 void CMFCDrawmanageDlg::OnCbnSelchangeCombo2()
 {
@@ -367,4 +406,129 @@ void CMFCDrawmanageDlg::OnCbnSelchangeCombo2()
 		Mode = OwnerDrawMode;
 		MessageBox(TEXT("自由绘图"), TEXT("提示"));
 	}
+}
+
+
+void CMFCDrawmanageDlg::OnBnClickedButton3()
+{
+	// TODO: 在此添加控件通知处理程序代码
+	Invalidate();
+}
+
+
+void CMFCDrawmanageDlg::OnMouseMove(UINT nFlags, CPoint point)
+{
+	// TODO: 在此添加消息处理程序代码和/或调用默认值
+	if (Mode == OwnerDrawMode&&StartDrawing) 
+	{
+		CClientDC dc(this); // 用于绘制的设备上下文
+		CPen pen(LineType, LineWidth, LineColor);  //创建红色画笔
+		CPen* poldPen = dc.SelectObject(&pen);  //选择画笔到设备
+		dc.MoveTo(LastPoint.x, LastPoint.y);
+		dc.LineTo(point.x, point.y);
+		dc.SelectObject(poldPen);  //恢复原始画笔
+		LastPoint = point;
+	}
+
+	CDialogEx::OnMouseMove(nFlags, point);
+}
+
+
+void CMFCDrawmanageDlg::OnBnClickedButton4()
+{
+	// TODO: 在此添加控件通知处理程序代码
+	Mode = TextMode;
+	UpdateData(true);
+	MessageBox(TEXT("请左键点击对话框选择插入文字的位置"), TEXT("提示"));
+
+}
+
+
+void CMFCDrawmanageDlg::OnBnClickedButton5()
+{
+	Mode = ImageMode;
+	// TODO: 在此添加控件通知处理程序代码
+		// TODO: Add your control notification handler code here   
+	// 设置过滤器   
+	TCHAR szFilter[] = _T("图片文件(*.png)|*.png|所有文件(*.*)|*.*||");
+	// 构造打开文件对话框   
+	CFileDialog fileDlg(TRUE, _T("png"), NULL, 0, szFilter, this);
+	CString strFilePath;
+
+	// 显示打开文件对话框   
+	if (IDOK == fileDlg.DoModal())
+	{
+		// 如果点击了文件对话框上的“打开”按钮，则将选择的文件路径显示到编辑框里   
+		strFilePath = fileDlg.GetPathName();
+		CClientDC dc(this);
+		CRect rect;
+		GetClientRect(&rect);
+		CImage image;
+		image.Load(strFilePath);
+		image.BitBlt(dc, 0, 0, rect.Width(), rect.Height(), 0, 0);
+		image.Destroy();  //防止内存泄漏
+	}
+
+	OnCbnSelchangeCombo2(); //切换回上一模式
+
+}
+
+
+void CMFCDrawmanageDlg::OnBnClickedButton6()
+{
+	// TODO: 在此添加控件通知处理程序代码
+	CClientDC dc(this);
+	CRect rect;
+	BOOL  showMsgTag;                  //是否要弹出”图像保存成功对话框" 
+	GetClientRect(&rect);                  //获取画布大小
+	HBITMAP hbitmap = CreateCompatibleBitmap(dc, rect.right - rect.left, rect.bottom - rect.top);
+	//创建兼容位图
+	HDC hdc = CreateCompatibleDC(dc);      //创建兼容DC，以便将图像保存为不同的格式
+	HBITMAP hOldMap = (HBITMAP)SelectObject(hdc, hbitmap);
+	//将位图选入DC，并保存返回值 
+	BitBlt(hdc, 0, 0, rect.right - rect.left, rect.bottom - rect.top, dc, 0, 0, SRCCOPY);
+	//将屏幕DC的图像复制到内存DC中
+	CImage image;
+	image.Attach(hbitmap);                //将位图转化为一般图像
+		showMsgTag = TRUE;
+		CString  strFilter = _T("位图文件(*.bmp)|*.bmp|JPEG 图像文件|*.jpg|GIF图像文件 | *.gif | PNG图像文件 | *.png |其他格式(*.*) | *.* || ");
+	    CFileDialog dlg(FALSE, _T("bmp"), _T("iPaint1.bmp"), NULL, strFilter);
+		if (dlg.DoModal() != IDOK)
+			return;
+		CString strFileName;          //如果用户没有指定文件扩展名，则为其添加一个
+		CString strExtension;
+		strFileName = dlg.m_ofn.lpstrFile;
+		if (dlg.m_ofn.nFileExtension = 0)               //扩展名项目为0
+		{
+			switch (dlg.m_ofn.nFilterIndex)
+			{
+			case 1:
+				strExtension = "bmp"; break;
+			case 2:
+				strExtension = "jpg"; break;
+			case 3:
+				strExtension = "gif"; break;
+			case 4:
+				strExtension = "png"; break;
+			default:
+				break;
+			}
+			strFileName = strFileName + "." + strExtension;
+		}
+	CString	saveFilePath = strFileName;     //saveFilePath为视类中的全局变量,类型为CStrin
+	//AfxMessageBox(saveFilePath);               //显示图像保存的全路径(包含文件名)
+	HRESULT hResult = image.Save(saveFilePath);     //保存图像
+
+	if (FAILED(hResult))
+	{
+		MessageBox(_T("保存图像文件失败！"));
+	}
+	else
+	{
+		if (showMsgTag)
+			MessageBox(_T("文件保存成功！"));
+	}
+	image.Detach();
+	SelectObject(hdc, hOldMap);
+
 }
