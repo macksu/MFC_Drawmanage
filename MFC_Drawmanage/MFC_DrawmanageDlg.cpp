@@ -278,7 +278,6 @@ void CMFCDrawmanageDlg::OnLButtonDown(UINT nFlags, CPoint point)
 		OnCbnSelchangeCombo2(); //切换回上一模式
 	}
 
-	OnCbnSelchangeCombo2(); //切换回上一模式
 
 	CDialogEx::OnLButtonDown(nFlags, point);
 }
