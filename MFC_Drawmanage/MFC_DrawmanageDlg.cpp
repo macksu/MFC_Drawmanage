@@ -423,8 +423,8 @@ void CMFCDrawmanageDlg::OnMouseMove(UINT nFlags, CPoint point)
 		CClientDC dc(this); // 用于绘制的设备上下文
 		CPen pen(LineType, LineWidth, LineColor);  //创建红色画笔
 		CPen* poldPen = dc.SelectObject(&pen);  //选择画笔到设备
-		dc.MoveTo(LastPoint.x, LastPoint.y);
-		dc.LineTo(point.x, point.y);
+		dc.MoveTo(LastPoint.x, LastPoint.y);  //移动到绘图位置
+		dc.LineTo(point.x, point.y);      //画线
 		dc.SelectObject(poldPen);  //恢复原始画笔
 		LastPoint = point;
 	}

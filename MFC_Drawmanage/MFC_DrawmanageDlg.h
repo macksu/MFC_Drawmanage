@@ -71,7 +71,7 @@ public:
 	void DrawLine();
 	void DrawEllipse();
 	void DrawRectangle();
-	CComboBox m_Mode;
+	CComboBox m_Mode;    //绘图模式
 	afx_msg void OnCbnSelchangeCombo2();
 	afx_msg void OnBnClickedButton3();
 	afx_msg void OnMouseMove(UINT nFlags, CPoint point);
